@@ -6,22 +6,22 @@
     <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
+<div>
+    <select name="tipoMoneda1" aria-label="Tipo de Moneda" id="tipoMoneda1">
+        <option value="default">Selecciona una divisa</option>
+    </select>
+</div>
+<div>
+    <select name="tipoMoneda1" aria-label="Tipo de Moneda" id="tipoMoneda2">
+        <option value="default">Selecciona una divisa</option>
+    </select>
+</div>
 
-<select name="tipoMoneda1" aria-label="Tipo de Moneda" id="tipoMoneda1">
-    <option value="default">Selecciona una divisa</option>
+<div>
+    <input id="amountInput" type="number">
+</div>
 
-
-</select>
-
-<select name="tipoMoneda1" aria-label="Tipo de Moneda" id="tipoMoneda2">
-    <option value="default">Selecciona una divisa</option>
-
-</select>
-
-<input id="amountInput" type="number">
-
-
-<button id="convertirDivisa" onclick="obtenerConversion()">Convertir divisa</button>
+<button id="convertirDivisa" disabled onclick="obtenerConversion()">Convertir divisa</button>
 
 <div id="resultadoConversion">
 
