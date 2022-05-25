@@ -10,6 +10,7 @@ let amount = 0
 let monedaFrom = 'default'
 let monedaTo = 'default'
 let rates = []
+let historicoFrom, historicoTo
 
 
 const obtenerDivisas = (url) => {
@@ -88,21 +89,63 @@ const obtenerConversion = () => {
                 resultado.innerText = `El resultado de la conversión es ${data.rates[monedaTo]}`
 
             }).catch(function (err) {
-        // There was an error
+        // Error
         console.error('ERROR', err)
     })
-    historicoConversion()
+    historicoConversion().catch(err => console.error(err))
+    lineasX = 11
 }
 
-const historicoConversion = () => {
-    fetch(`https://${api}/2021-01-01..?to=${monedaTo}`)
-            .then(resp => resp.json())
-            .then((data) => {
-                console.log('CONVERSIÓN DATA=>', data)
-            }).catch(function (err) {
-        // There was an error
-        console.error('ERROR', err)
-    })
+const historicoConversion = async () => {
+    if (monedaFrom !== 'EUR') {
+        await fetch(`https://${api}/2021-01-01..?to=${monedaFrom}`)
+                .then(resp => resp.json())
+                .then((data) => {
+                    console.log('MonedaFrom histórico=>', data.rates)
+                    historicoFrom = data.rates
+                }).catch(function (err) {
+                    // Error
+                    console.error('ERROR', err)
+                })
+    }
+    if (monedaTo !== 'EUR') {
+        await fetch(`https://${api}/2021-01-01..?to=${monedaTo}`)
+                .then(resp => resp.json())
+                .then((data) => {
+                    console.log('MonedaTo histórico=>', data.rates)
+                    historicoTo = data.rates
+                }).catch(function (err) {
+                    // Error
+                    console.error('ERROR', err)
+                })
+    }
+
+    let minimo = 999999999
+    let maximo = -99999999
+
+    for (const key in historicoTo) {
+        console.log('Lee el numero o que => ', Object.keys(historicoTo[key])[0])
+        if (historicoTo[key][Object.keys(historicoTo[key])[0]] < minimo) {
+            minimo = historicoTo[key][Object.keys(historicoTo[key])[0]]
+        }
+        if (historicoTo[key][Object.keys(historicoTo[key])[0]] > maximo) {
+            maximo = historicoTo[key][Object.keys(historicoTo[key])[0]]
+        }
+    }
+
+    for (const key in historicoFrom) {
+        console.log('Lee el numero o que => ', Object.keys(historicoFrom[key])[0])
+        if (historicoFrom[key][Object.keys(historicoFrom[key])[0]] < minimo) {
+            minimo = historicoFrom[key][Object.keys(historicoFrom[key])[0]]
+        }
+        if (historicoFrom[key][Object.keys(historicoFrom[key])[0]] > maximo) {
+            maximo = historicoFrom[key][Object.keys(historicoFrom[key])[0]]
+        }
+    }
+
+    minValue = minimo
+    maxValue = maximo
+
 }
 
 const validar = () => {
@@ -114,11 +157,14 @@ let yaxis = [0]
 let maxx = 0
 let minx = 0
 
-let lineasX, lineasY
+let lineasX = 20
 let width = 600
 let height = 400
 let margin = 40
 let meses = 0
+let minValue = 0.0
+let maxValue = 2.0
+let count = minValue
 
 
 function setup() {
@@ -140,20 +186,52 @@ const getMonthName = (position) => {
     return meses[position]
 }
 
+const dibujaLinea = (historico) => {
+    let lastX = 0
+    let lastY = 0
+    let puntoX = margin
+    let puntoY = 0
+    let i = 0
+    for (const elemento in historico) {
+        if (i !== 0) {
+            lastX = puntoX
+            lastY = puntoY
+            puntoX += (width - margin * 2) / meses / 4
+        }
+
+        puntoY = (height - margin) * historico[elemento][Object.keys(historico[elemento])[0]] / maxValue
+
+        console.log('XDiv => ', (width - margin * 2) / meses / 5)
+
+        if (i !== 0 && puntoX <= width - margin) {
+
+            line(lastX, lastY, puntoX, puntoY)
+
+        }
+
+        i++
+    }
+
+    // line(px, py, x, y)
+
+}
+
 function draw() {
     background(220)
-    let cantidad = 0
+    let cantidad = minValue
+    let k = 0
 
     //lineas alto
     let yaxis = height - margin
-    let yDiv = (height - (margin * 2)) / 20
-
+    let yDiv = (height - (margin * 2)) / lineasX
 
     do {
-        text((cantidad++ / 10).toFixed(1), margin - 28, yaxis + 5)
+        text(cantidad.toFixed(2), margin - 28, yaxis + 5)
         rect(margin, yaxis, width - margin * 2, 0.5)
         yaxis -= yDiv
-    } while (cantidad <= 20)
+        cantidad += (maxValue - minValue) / lineasX
+        k++
+    } while (k <= lineasX)
 
     // lineas verticales
     let lineas = 0
@@ -168,5 +246,7 @@ function draw() {
         lineas += 1
     } while (lineas <= meses)
 
+    dibujaLinea(historicoFrom)
+    dibujaLinea(historicoTo)
 
 }
